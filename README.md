@@ -3,9 +3,9 @@ Code for students in University of Pisa to run a simplified H->4 lepton search u
 
 ## CMS 2016 data and NanoAOD
 Link to [announcement of 2016 OpenData](https://opendata.cern.ch/docs/cms-releases-2016data-2024)
-NanoAOD are [ROOT](https://root.cern/) TTree files. The variables are documented [here](https://opendata.cern.ch/eos/opendata/cms/dataset-semantics/NanoAODSIM/37728/GluGluHToZZTo4L_M125_TuneCP5_13TeV_powheg2_JHUGenV7011_pythia8_doc.html)
+NanoAOD are [ROOT](https://root.cern/) files containing a `TTree` (named `Events`) storing variables of the reconstructed objects (eg. `Muon_pt`). The variables are documented [here](https://opendata.cern.ch/eos/opendata/cms/dataset-semantics/NanoAODSIM/37728/GluGluHToZZTo4L_M125_TuneCP5_13TeV_powheg2_JHUGenV7011_pythia8_doc.html)
 
-### Data
+### 2016 data
 [Link to 2016 data available](https://opendata.cern.ch/search?q=&f=experiment%3ACMS&f=type%3ADataset%2Bsubtype%3ACollision&f=year%3A2016&l=list&order=desc&p=1&s=10&sort=mostrecent): 
 - Two "eras" available:
   - Run2016G (run 278820-280385). List of dataset available [here](https://github.com/silviodonato/OpenDataCMS2016NanoAOD/blob/main/DatasetInfo/Run2016G.txt).
