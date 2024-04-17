@@ -1,8 +1,9 @@
 # OpenDataCMS2016NanoAOD
-Code for students in University of Pisa to run a simplified H->4 lepton search using 2016 CMS open data based on NanoAOD format. Part of the code is based on a similar exercise done for University of Zurich Particle Physics laboratory in 2016.
+Code for students in University of Pisa to run a simplified H->4 lepton search using 2016 CMS open data based on NanoAOD format. 
 
 ## CMS 2016 data and NanoAOD
 Link to [announcement of 2016 OpenData](https://opendata.cern.ch/docs/cms-releases-2016data-2024)
+NanoAOD are [ROOT](https://root.cern/) TTree files. The variables are documented [here](https://opendata.cern.ch/eos/opendata/cms/dataset-semantics/NanoAODSIM/37728/GluGluHToZZTo4L_M125_TuneCP5_13TeV_powheg2_JHUGenV7011_pythia8_doc.html)
 
 ### Data
 [Link to 2016 data available](https://opendata.cern.ch/search?q=&f=experiment%3ACMS&f=type%3ADataset%2Bsubtype%3ACollision&f=year%3A2016&l=list&order=desc&p=1&s=10&sort=mostrecent): 
