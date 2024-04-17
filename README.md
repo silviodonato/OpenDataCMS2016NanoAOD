@@ -19,7 +19,7 @@ Link to [announcement of 2016 OpenData](https://opendata.cern.ch/docs/cms-releas
 
 ### How to access data
 
-You might need to install `xrootd-client` or using a docker image, see below.
+You might need to install `xrootd-client`, or using a docker image, or using [cernopendata-client](https://cernopendata-client.readthedocs.io/en/latest/installation.html) (see below).
 
 Example:
 ~~~
