@@ -5,14 +5,13 @@ Code for students in University of Pisa to run a simplified H->4 lepton search u
 News: https://opendata.cern.ch/docs/cms-releases-2016data-2024
  - Data: https://opendata.cern.ch/search?q=&f=experiment%3ACMS&f=type%3ADataset%2Bsubtype%3ACollision&f=year%3A2016&l=list&order=desc&p=1&s=10&sort=mostrecent
     - Two "eras" available:
-        - Run2016G (run 278820-280385).  
-        - Run2016H (run 280919-284044)
+        - Run2016G (run 278820-280385). List of dataset available [here](https://github.com/silviodonato/OpenDataCMS2016NanoAOD/blob/main/DatasetInfo/Run2016G.txt).
+        - Run2016H (run 280919-284044). List of dataset available [here](https://github.com/silviodonato/OpenDataCMS2016NanoAOD/blob/main/DatasetInfo/Run2016H.txt).
     - How to compute luminosity: [link] (https://opendata.cern.ch/docs/cms-guide-luminosity-calculation)
         - Good data selector (aka GoldenJSON [link](https://opendata.cern.ch/record/14221) )
    - Example: /SingleMuon/Run2016H-UL2016_MiniAODv2_NanoAODv9-v1/NANOAOD [DOI:10.7483/OPENDATA.CMS.4BUS.64MV] : https://opendata.cern.ch/record/30563 
       - List of triggers [1]
       - File example: `root://eospublic.cern.ch//eos/opendata/cms/Run2016H/SingleMuon/NANOAOD/UL2016_MiniAODv2_NanoAODv9-v1/120000/61FC1E38-F75C-6B44-AD19-A9894155874E.root`
-   - HLT configuration: https://opendata.cern.ch/record/30300
  - Simulation: https://opendata.cern.ch/search?q=&f=experiment%3ACMS&f=type%3ADataset%2Bsubtype%3ASimulated&f=year%3A2016&l=list&order=desc&p=1&s=10&sort=mostrecent 
     - Example: `GluGluHToZZTo4L_M125_TuneCP5_13TeV_powheg2_JHUGenV7011_pythia8`
         - Example file: `root://eospublic.cern.ch//eos/opendata/cms/mc/RunIISummer20UL16NanoAODv9/GluGluHToZZTo4L_M125_TuneCP5_13TeV_powheg2_JHUGenV7011_pythia8/NANOAODSIM/106X_mcRun2_asymptotic_v17-v2/260000/6116BC4B-92FF-D24E-99F1-2017BCF6C83A.root`
@@ -22,13 +21,18 @@ Docker ( [guide](https://opendata.cern.ch/docs/cms-guide-docker) ):
  - gitlab-registry.cern.ch/cms-cloud/root-vnc
  - gitlab-registry.cern.ch/cms-cloud/python-vnc
 
-
 Example:
 ~~~
 source this
 root -l root://eospublic.cern.ch//eos/opendata/cms/derived-data/PFNano/29-Feb-24/SingleMuon/Run2016G-UL2016_MiniAODv2_PFNanoAODv1/240207_205649/0000/nano_data2016_100.root
 ~~~
 
+# Miscellanea
+
+HLT configuration: https://opendata.cern.ch/record/30300
+    - Run 278820, [HLTConfiguration_Run278820_cdaq_physics_Run2016_25ns15e33_v3.1.3_HLT_V15](), release [CMSSW_8_0_17](https://github.com/cms-sw/cmssw/tree/CMSSW_8_0_17)
+    - Run 284044, [HLTConfiguration_Run278820_cdaq_physics_Run2016_25ns15e33_v3.1.3_HLT_V15](), release [CMSSW_8_0_19_patch2](https://github.com/cms-sw/cmssw/tree/CMSSW_8_0_19_patch2)
+    - 
 
 [1]
 HLT_DoubleIsoMu17_eta2p1_noDzCut
