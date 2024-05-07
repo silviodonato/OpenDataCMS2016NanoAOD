@@ -1,6 +1,21 @@
 # OpenDataCMS2016NanoAOD
 Code for students in University of Pisa to run a simplified H->4 lepton search using 2016 CMS open data based on NanoAOD format. 
 
+## Skim
+
+The code `python3 example.py` will make plots using the input files, lumi, and crosssection defined in [example.py](https://github.com/silviodonato/OpenDataCMS2016NanoAOD/blob/main/example.py).
+The samples need to be defined also in [Samples.py](https://github.com/silviodonato/OpenDataCMS2016NanoAOD/blob/main/Samples.py#L22).
+The histograms are defined in `bookHistos` in [MyAnalysis.py](https://github.com/silviodonato/OpenDataCMS2016NanoAOD/blob/main/MyAnalysis.py#59).
+The event selection is defined in `processEvent` [MyAnalysis.py](https://github.com/silviodonato/OpenDataCMS2016NanoAOD/blob/main/MyAnalysis.py#L109)
+
+## Skim
+
+The code [mergeAndSkim.C](https://github.com/silviodonato/OpenDataCMS2016NanoAOD/blob/main/Skim/mergeAndSkim.C#L113C69-L113C80) apply the selection defined in `cut`,
+and can used with `root -l mergeAndSkim.C++\(\"root://eospublic.cern.ch//eos/opendata/cms/Run2016H/SingleMuon/NANOAOD/UL2016_MiniAODv2_NanoAODv9-v1/70000/388AB3E1-8708-7D42-91BA-83E52373E808.root\"\)`.
+To submit multiple jobs in parallel using `bsub`, use `python3 makeScriptAndSubmit.py` ([makeScriptAndSubmit.py](https://github.com/silviodonato/OpenDataCMS2016NanoAOD/blob/main/Skim/makeScriptAndSubmit.py)).
+To resubmit crahsing jobs, please have a look at [resbumit.py](https://github.com/silviodonato/OpenDataCMS2016NanoAOD/blob/main/Skim/resubmit.py)
+
+
 ## CMS 2016 data and NanoAOD
 Link to [announcement of 2016 OpenData](https://opendata.cern.ch/docs/cms-releases-2016data-2024)
 NanoAOD are [ROOT](https://root.cern/) files containing a `TTree` (named `Events`) storing variables of the reconstructed objects (eg. `Muon_pt`). See documentation: [Getting started with NanoAOD](https://opendata.cern.ch/docs/cms-getting-started-nanoaod). The variables are documented [here](https://opendata.cern.ch/eos/opendata/cms/dataset-semantics/NanoAODSIM/37728/GluGluHToZZTo4L_M125_TuneCP5_13TeV_powheg2_JHUGenV7011_pythia8_doc.html)
@@ -170,3 +185,5 @@ Link to the [guide](https://opendata.cern.ch/docs/cms-guide-docker):
     'HLT_TkMu27_v5',
     'HLT_TkMu50_v3' ),
 ```
+
+
