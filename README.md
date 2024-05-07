@@ -5,8 +5,8 @@ Code for students in University of Pisa to run a simplified H->4 lepton search u
 
 The code `python3 example.py` will make plots using the input files, lumi, and crosssection defined in [example.py](https://github.com/silviodonato/OpenDataCMS2016NanoAOD/blob/main/example.py).
 The samples need to be defined also in [Samples.py](https://github.com/silviodonato/OpenDataCMS2016NanoAOD/blob/main/Samples.py#L22).
-The histograms are defined in `bookHistos` in [MyAnalysis.py](https://github.com/silviodonato/OpenDataCMS2016NanoAOD/blob/main/MyAnalysis.py#59).
-The event selection is defined in `processEvent` [MyAnalysis.py](https://github.com/silviodonato/OpenDataCMS2016NanoAOD/blob/main/MyAnalysis.py#L109).
+The histograms are defined in `bookHistos()` in [MyAnalysis.py](https://github.com/silviodonato/OpenDataCMS2016NanoAOD/blob/main/MyAnalysis.py#59).
+The event selection is defined in `processEvent()` [MyAnalysis.py](https://github.com/silviodonato/OpenDataCMS2016NanoAOD/blob/main/MyAnalysis.py#L109).
 The input files should be a file (or a symbolic link) with the same name of the samples (eg. `ggH.root`).
 The input files are typically skimmed from a larger files, using the following Skim section.
 
