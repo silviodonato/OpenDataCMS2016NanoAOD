@@ -1,12 +1,14 @@
 # OpenDataCMS2016NanoAOD
 Code for students in University of Pisa to run a simplified H->4 lepton search using 2016 CMS open data based on NanoAOD format. 
 
-## Skim
+## Plots
 
 The code `python3 example.py` will make plots using the input files, lumi, and crosssection defined in [example.py](https://github.com/silviodonato/OpenDataCMS2016NanoAOD/blob/main/example.py).
 The samples need to be defined also in [Samples.py](https://github.com/silviodonato/OpenDataCMS2016NanoAOD/blob/main/Samples.py#L22).
 The histograms are defined in `bookHistos` in [MyAnalysis.py](https://github.com/silviodonato/OpenDataCMS2016NanoAOD/blob/main/MyAnalysis.py#59).
-The event selection is defined in `processEvent` [MyAnalysis.py](https://github.com/silviodonato/OpenDataCMS2016NanoAOD/blob/main/MyAnalysis.py#L109)
+The event selection is defined in `processEvent` [MyAnalysis.py](https://github.com/silviodonato/OpenDataCMS2016NanoAOD/blob/main/MyAnalysis.py#L109).
+The input files should be a file (or a symbolic link) with the same name of the samples (eg. `ggH.root`).
+The input files are typically skimmed from a larger files, using the following Skim section.
 
 ## Skim
 
@@ -14,7 +16,7 @@ The code [mergeAndSkim.C](https://github.com/silviodonato/OpenDataCMS2016NanoAOD
 and can used with `root -l mergeAndSkim.C++\(\"root://eospublic.cern.ch//eos/opendata/cms/Run2016H/SingleMuon/NANOAOD/UL2016_MiniAODv2_NanoAODv9-v1/70000/388AB3E1-8708-7D42-91BA-83E52373E808.root\"\)`.
 To submit multiple jobs in parallel using `bsub`, use `python3 makeScriptAndSubmit.py` ([makeScriptAndSubmit.py](https://github.com/silviodonato/OpenDataCMS2016NanoAOD/blob/main/Skim/makeScriptAndSubmit.py)).
 To resubmit crahsing jobs, please have a look at [resbumit.py](https://github.com/silviodonato/OpenDataCMS2016NanoAOD/blob/main/Skim/resubmit.py)
-
+The input files can be the CMS NanoAOD open data, as described below.
 
 ## CMS 2016 data and NanoAOD
 Link to [announcement of 2016 OpenData](https://opendata.cern.ch/docs/cms-releases-2016data-2024)
