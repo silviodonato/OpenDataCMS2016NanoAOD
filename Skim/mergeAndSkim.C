@@ -11,7 +11,38 @@
 #include"TFile.h"
 #include"TH1F.h"
 #include"TTreeFormula.h"
+#include"TLorentzVector.h"
 #include <iostream>
+
+
+std::vector<TLorentzVector> parts;
+
+float computeMass(float pt, float eta, float phi, float mass, int iteration, int length){
+    using namespace std;
+    float value = 0;
+    if(iteration==0){
+        parts.clear();
+    }
+    TLorentzVector part;
+    part.SetPtEtaPhiM(pt, eta, phi, mass);
+    parts.push_back(part);
+    if(iteration==length-1){
+        if(parts.size()<2) return -1;
+        float maxMass = -1;
+        // Loop over all combinations of pairs of particles
+        for (size_t i = 0; i < parts.size(); ++i) {
+            for (size_t j = i + 1; j < parts.size(); ++j) {
+                // Compute invariant mass using TLorentzVector's method
+                double mass = (parts[i] + parts[j]).M();
+                if (mass > maxMass) {
+                    maxMass = mass;
+                }
+            }
+        }        
+        return maxMass;
+    }
+    else return 0;
+}
 
 void skimAndMergeFile(TString inputFiles, TString prefix=""){ //, TString outputFile
     TString outputFile;
@@ -33,6 +64,44 @@ void skimAndMergeFile(TString inputFiles, TString prefix=""){ //, TString output
    
     tree->Add(inputFiles);
 
+    // Disable FatJet branches
+    tree->SetBranchStatus("FatJet*",0);
+    tree->SetBranchStatus("HLT_*",0);
+    tree->SetBranchStatus("HLT_*",0);
+    tree->SetBranchStatus("DST_*",0);
+    tree->SetBranchStatus("HLT_IsoMu*",1);
+    tree->SetBranchStatus("L1_*",0);
+    tree->SetBranchStatus("L1_SingleMu*",1);
+    tree->SetBranchStatus("nSV*",0);
+    tree->SetBranchStatus("SV_*",0);
+    tree->SetBranchStatus("LowPtElectron_*",0);
+    tree->SetBranchStatus("nLowPtElectron",0);
+    tree->SetBranchStatus("TrigObj_*",0);
+    tree->SetBranchStatus("nTrigObj",0);
+    tree->SetBranchStatus("*SubJet*",0);
+    tree->SetBranchStatus("*Proton*",0);
+    tree->SetBranchStatus("*SoftActivity*",0);
+    tree->SetBranchStatus("*PPS*",0);
+    tree->SetBranchStatus("L1Pre*",0);
+    tree->SetBranchStatus("*boosted*",0);
+    tree->SetBranchStatus("*IsoTrack*",0);
+    tree->SetBranchStatus("*CorrT1*",0);
+    
+    // tree->SetBranchStatus("*",0);
+    // tree->SetBranchStatus("run",1);
+    // tree->SetBranchStatus("event",1);
+    // tree->SetBranchStatus("luminosityBlock",1);
+    // tree->SetBranchStatus("bunchCrossing",1);
+    // tree->SetBranchStatus("*Electron*",1);
+    // tree->SetBranchStatus("*FsrPhoton*",1);
+    // tree->SetBranchStatus("*Jet*",1);
+    // tree->SetBranchStatus("MET_*",1);
+    // tree->SetBranchStatus("PuppiMET_*",1);
+    // tree->SetBranchStatus("*Muon*",1);
+    // tree->SetBranchStatus("*Photon*",1);
+    
+
+
     fileout->cd();
     int entries = tree->GetEntries();
     if(entries<=0) {
@@ -41,15 +110,19 @@ void skimAndMergeFile(TString inputFiles, TString prefix=""){ //, TString output
     }
     TTree* newTree = tree->CloneTree(0);
     
-    TTreeFormula* cut = new TTreeFormula("cut","HLT_IsoMu24_eta2p1",tree);
+    TTreeFormula* cut = new TTreeFormula("cut","HLT_IsoMu24 && Sum$(computeMass(Muon_pt, Muon_eta, Muon_phi, Muon_mass, Iteration$, Length$))>50 ",tree);
 //    TTreeFormula* puFilter = new TTreeFormula("puFilter","ptHat>maxPUptHat",tree);
     
+    cout << "Total entries " << entries << endl;
    for(int i=0; i<tree->GetEntries(); i++){
         tree->GetEntry(i);
         cut->UpdateFormulaLeaves();
         // puFilter->UpdateFormulaLeaves();
         if(cut->EvalInstance()){ //puFilter->EvalInstance() && 
             newTree->Fill();
+        }
+        if(i%100==0){
+            cout<<i<<endl;
         }
     }
     newTree->Write();
