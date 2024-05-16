@@ -25,7 +25,7 @@ class MyAnalysis(object):
         filename = os.path.join(file_path, sample + ".root")
         if not os.path.isfile(filename):
             raise ValueError("{} is not an existing file!".format(filename))
-        self._file = ROOT.TFile(filename)
+        self._file = ROOT.TFile.Open(filename)
         self._file.cd()
         # tree = self._file.Get("Events")
         self._tree = self._file.Get("Events")
@@ -35,17 +35,17 @@ class MyAnalysis(object):
         self.maxEvents = maxEvents
         print("Number of entries for {}: {}".format(self.sample, self.nEvents))
 
-        self._tree.SetBranchStatus("*",0)
-        self._tree.SetBranchStatus("run",1)
-        self._tree.SetBranchStatus("luminosityBlock",1)
-        self._tree.SetBranchStatus("event",1)
-        self._tree.SetBranchStatus("nMuon",1)
-        self._tree.SetBranchStatus("Muon_pt",1)
-        self._tree.SetBranchStatus("Muon_eta",1)
-        self._tree.SetBranchStatus("Muon_phi",1)
-        self._tree.SetBranchStatus("Muon_mass",1)
-        self._tree.SetBranchStatus("Muon_pfRelIso03_all",1)
-        self._tree.SetBranchStatus("genWeight",1)
+        # self._tree.SetBranchStatus("*",0)
+        # self._tree.SetBranchStatus("run",1)
+        # self._tree.SetBranchStatus("luminosityBlock",1)
+        # self._tree.SetBranchStatus("event",1)
+        # self._tree.SetBranchStatus("nMuon",1)
+        # self._tree.SetBranchStatus("Muon_pt",1)
+        # self._tree.SetBranchStatus("Muon_eta",1)
+        # self._tree.SetBranchStatus("Muon_phi",1)
+        # self._tree.SetBranchStatus("Muon_mass",1)
+        # self._tree.SetBranchStatus("Muon_pfRelIso03_all",1)
+        # self._tree.SetBranchStatus("genWeight",1)
 
         ### Book histograms
         self.bookHistos()
@@ -96,40 +96,12 @@ class MyAnalysis(object):
 
     def saveHistos(self):
         outfilename = os.path.join(histo_path, self.sample + "_histos.root")
-        outfile = ROOT.TFile(outfilename, "RECREATE")
+        outfile = ROOT.TFile.Open(outfilename, "RECREATE")
         outfile.cd()
         for h in self.histograms.values():
             h.Write()
         outfile.Close()
-
-    ### processEvent function implements the actions to perform on each event
-    ### This is the place where to implement the analysis strategy: study of most sensitive variables
-    ### and signal-like event selection
-
-    def processEvent(self, entry, weight):
-        tree = self.getTree()
-        tree.GetEntry(entry)
-        if entry%1000==0: print(entry)
-        if hasattr(tree,"genWeight"):  ## is MC
-            w = weight * (tree.genWeight>0)
-        else: 
-            w = 1 ## for data
-
-        ### Muon selection - Select events with at least 1 isolated muon
-        ### with pt>25 GeV to match trigger requirements
-        muonPtCut = 25
-        muonRelIsoCut = 0.05
-        nIsoMu = 0
-
-        muon = ROOT.TLorentzVector()
-        for m in range(tree.nMuon):
-            muon.SetPtEtaPhiM(tree.Muon_pt[m], tree.Muon_eta[m], tree.Muon_phi[m], tree.Muon_mass[m])
-            self.histograms["Muon_Iso"].Fill(tree.Muon_pfRelIso03_all[m], w)
-            if muon.Pt() > muonPtCut and (tree.Muon_pfRelIso03_all[m] / muon.Pt()) < muonRelIsoCut:
-                nIsoMu += 1
-                self.histograms["Muon_Pt"].Fill(muon.Pt(), w)
-        self.histograms["NIsoMu"].Fill(nIsoMu, w)
-        # print(self.histograms["NIsoMu"].Integral())
+        print("Histograms saved in {}".format(outfilename))
 
     ### processEvents run the function processEvent on each event stored in the tree
     def processEvents(self):
@@ -140,7 +112,34 @@ class MyAnalysis(object):
         weight = self.xsec*self.lumi/count * self.nEvents/nevts
         print(self.xsec,self.lumi,count , self.nEvents,nevts, self.xsec*self.lumi/count * self.nEvents/nevts)
             # weight = weight * self.nEvents/nevts ## larger weight if only a fraction of events is used
-        for i in range(nevts):
-            self.processEvent(i, weight)
+        tree = self.getTree()
+        muon = ROOT.TLorentzVector()
+
+        ### This is the place where to implement the analysis strategy: study of most sensitive variables
+        ### and signal-like event selection
+        for entry,event in enumerate(tree):
+            if entry%1000==0: print(entry)
+            if entry>=nevts: break
+            if hasattr(event,"genWeight"):  ## is MC
+                w = weight * (event.genWeight>0)
+            else: 
+                w = self.nEvents / nevts ## for data, ==1 if all events are processed
+
+            ### Muon selection - Select events with at least 1 isolated muon
+            ### with pt>25 GeV to match trigger requirements
+            muonPtCut = 25
+            muonRelIsoCut = 0.05
+            nIsoMu = 0
+
+            for m in range(event.nMuon):
+                self.histograms["Muon_Iso"].Fill(event.Muon_tkRelIso[m], w)
+                if (event.Muon_mediumId[m] == 1) and (event.Muon_tkIsoId[m] == 1):
+                    nIsoMu += 1
+                    # # muon.SetPtEtaPhiM(event.Muon_pt[m], event.Muon_eta[m], event.Muon_phi[m], event.Muon_mass[m])
+                    # if muon.Pt() > muonPtCut and (event.Muon_pfRelIso03_all[m] / muon.Pt()) < muonRelIsoCut:
+                    #     nIsoMu += 1
+                    #     self.histograms["Muon_Pt"].Fill(muon.Pt(), w)
+            self.histograms["NIsoMu"].Fill(nIsoMu, w)
+            # print(self.histograms["NIsoMu"].Integral())
 
         self.saveHistos()

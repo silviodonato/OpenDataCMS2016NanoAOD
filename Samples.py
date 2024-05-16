@@ -7,9 +7,9 @@ import ROOT
 samp = {}
 
 # TODO: change path below
-save_path = "/home/sdonato/CMS/CorsoCavasinni/OpenDataCMS2016NanoAOD/"  # can also be just '.', means same directory as script
-file_path = "/home/sdonato/CMS/CorsoCavasinni/OpenDataCMS2016NanoAOD/"
-histo_path = "/home/sdonato/CMS/CorsoCavasinni/OpenDataCMS2016NanoAOD/ppp_small_project"
+save_path = "outputFiles/"  # can also be just '.', means same directory as script
+file_path = "inputFiles/"
+histo_path = "histos/"
 
 if any(p.startswith("The/Path/where/") for p in (save_path, file_path, histo_path)):  # change the defaults!
     raise ValueError("Please specify all path in samples.py first")
