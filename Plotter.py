@@ -4,7 +4,12 @@ import os
 
 import ROOT
 
-from Samples import samp, save_path, histo_path
+save_path = "outputFiles/"  # can also be just '.', means same directory as script
+file_path = "inputFiles/"
+histo_path = "histos/"
+
+
+# from Samples import samp, save_path, histo_path
 
 # ROOT.gROOT.Reset()
 ROOT.gROOT.SetStyle('Plain')
@@ -66,6 +71,7 @@ def setStyleLegend(leg):
     leg.SetTextSize(0.045)
     leg.SetTextFont(42)
 
+legValues = (0.49, 0.89, 0.99, 0.99)
 
 def getStack(var, samples, excludeSig=False):
     """
@@ -81,7 +87,7 @@ def getStack(var, samples, excludeSig=False):
     Tuple[ROOT.THStack, ROOT.TLegend]
     """
     hs = ROOT.THStack(var, "")
-    leg = ROOT.TLegend(0.47, 0.65, 0.89, 0.89)
+    leg = ROOT.TLegend(*legValues)
     setStyleLegend(leg)
 
     for s in samples:
@@ -91,11 +97,13 @@ def getStack(var, samples, excludeSig=False):
                                           "Please, check to have processed the corresponding sample")
             continue
         else:
+            if samples[s]["xsec"] == 0: ## do not plot data in the stack!
+                continue
             if excludeSig and s == "ggH4L":
                 continue
             f = ROOT.TFile.Open(histos_file)
             h = f.Get(var)
-            setStyle(h, samp[s], 1, 1001)
+            setStyle(h, samples[s]["color"], 1, 1001)
             hs.Add(h, "HIST")
             leg.AddEntry(h, s, "f")
 
@@ -103,7 +111,7 @@ def getStack(var, samples, excludeSig=False):
     return hs, leg
 
 
-def plotVar(var, samples, isData=False, logScale=False):
+def plotVar(var, samples, sample, isData=False, logScale=False):
     c = ROOT.TCanvas()
     if logScale:
         c.SetLogy()
@@ -111,23 +119,11 @@ def plotVar(var, samples, isData=False, logScale=False):
     leg = getStack(var, samples)[1]
     hs.Draw()
     ### Superimposing signal events (ttbar) to visualise its shape
-    histos_file = os.path.join(histo_path, "dy_histos.root")
+    histos_file = os.path.join(histo_path, "%s_histos.root"%sample)
     print(histo_path)
     print(histos_file)
-    if not os.path.exists(histos_file):
-        print("File " + histos_file + " does not exist."
-                                      "Please, check to have processed the corresponding sample")
-    else:
-        f = ROOT.TFile.Open(histos_file)
-        h = f.Get(var)
-        setStyle(h, samp["dy"], 0, 0)
-        h.SetLineColor(samp["dy"])
-        h.SetLineWidth(2)
-        h.Draw("histsame")
-        leg.AddEntry(h, "dy", "L")
-
     if isData:
-        data_histos = os.path.join(histo_path, "data_histos.root")
+        data_histos = os.path.join(histo_path, "%s_histos.root"%sample)
         if not os.path.exists(data_histos):
             print("File " + data_histos + "does not exist."
                                           "Please, check to have processed the corresponding sample")
@@ -136,15 +132,32 @@ def plotVar(var, samples, isData=False, logScale=False):
             h = f.Get(var)
             setStyle(h, ROOT.kBlack, 0, 0)
             h.Draw("same")
-            leg.AddEntry(h, "data", "*")
+            leg.AddEntry(h, sample, "P")
+    else:
+        if not os.path.exists(histos_file):
+            print("File " + histos_file + " does not exist."
+                                        "Please, check to have processed the corresponding sample")
+        else:
+            f = ROOT.TFile.Open(histos_file)
+            h = f.Get(var)
+            setStyle(h, samples[sample]["color"], 0, 0)
+            h.SetLineColor(samples[sample]["color"])
+            h.SetLineWidth(2)
+            h.Draw("histsame")
+            leg.AddEntry(h, sample, "L")
 
     ymax = max(hs.GetStack().Last().GetMaximum(), h.GetMaximum())
     leg.Draw("SAME")
-    if isData:
-        hs.SetMaximum(ymax * 1.3)
-        c.SaveAs(os.path.join(save_path, var + ".pdf"))
+    if hs.GetStack().Last().Integral() >0:
+        if isData:
+            hs.SetMaximum(ymax * 1.3)
+            c.SaveAs(os.path.join(save_path, var + ".pdf"))
+            c.SaveAs(os.path.join(save_path, var + ".root"))
+        else:
+            c.SaveAs(os.path.join(save_path, var + "_MC.pdf"))
+            c.SaveAs(os.path.join(save_path, var + "_MC.root"))
     else:
-        c.SaveAs(os.path.join(save_path, var + "_MC.pdf"))
+        print("WARNING. No events in the sample %s var %s"%(sample, var))
     print("plotVar DONE.")
 
 def plotVarNorm(var, samples, logScale=False):
@@ -161,7 +174,7 @@ def plotVarNorm(var, samples, logScale=False):
     if logScale:
         c.SetLogy()
 
-    leg = ROOT.TLegend(0.47, 0.65, 0.89, 0.89)
+    leg = ROOT.TLegend(*legValues)
     setStyleLegend(leg)
 
     for s in samples:
@@ -186,7 +199,7 @@ def plotVarNorm(var, samples, logScale=False):
     print("plotVarNorm DONE.")
 
 
-def plotShapes(var, samples, logScale=False):
+def plotShapes(var, samples, sample, logScale=False):
     """
 
     Parameters
@@ -200,7 +213,7 @@ def plotShapes(var, samples, logScale=False):
     if logScale:
         c.SetLogy()
     hs = getStack(var, samples, True)[0]
-    leg = ROOT.TLegend(0.47, 0.65, 0.89, 0.89)
+    leg = ROOT.TLegend(*legValues)
     setStyleLegend(leg)
 
     h_bkg = hs.GetStack().Last()
@@ -211,7 +224,7 @@ def plotShapes(var, samples, logScale=False):
     h_bkg.Draw("hist")
     leg.AddEntry(h_bkg, "Background", "l")
 
-    histos_file = os.path.join(histo_path, "dy_histos.root")
+    histos_file = os.path.join(histo_path, "Drell-Yan_histos.root")
     if not os.path.exists(histos_file):
         print("File " + histos_file + " does not exist."
                                       "Please, check to have processed the corresponding sample")
@@ -219,13 +232,13 @@ def plotShapes(var, samples, logScale=False):
     else:
         f = ROOT.TFile.Open(histos_file)
         h = f.Get(var)
-        setStyle(h, samp["dy"], 0, 0)
+        setStyle(h, samples[sample]["color"], 0, 0)
         h.SetLineColor(ROOT.kPink - 8)
         h.SetLineWidth(2)
         if h.Integral() != 0.:
             h.Scale(1 / h.Integral())
         h.Draw("histsame")
-        leg.AddEntry(h, "Signal (dy)", "L")
+        leg.AddEntry(h, sample, "L")
 
     leg.Draw("SAME")
     c.SaveAs(os.path.join(save_path, var + "_Shape_MC.pdf"))

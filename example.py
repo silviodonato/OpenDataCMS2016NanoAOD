@@ -1,40 +1,82 @@
-from __future__ import print_function, division, absolute_import
+# from __future__ import print_function, division, absolute_import
+import sys, os
 
-import sys
-import os
+import ROOT
 
-sys.path.append(os.path.abspath(os.path.curdir))  # append current dir explicit to path (py2 was implicit)
+nparallelprocesses = 4
 
-from MyAnalysis import MyAnalysis
-from Plotter import plotVar, plotVarNorm, plotShapes
+save_path = "outputFiles/"  # can also be just '.', means same directory as script
+# inputFolder = "inputFiles/"
+#inputFolder = "4muons/"
+# inputFolder = "prescale20/"
+inputFolder = "2muons2electrons/"
+histo_path = "histos/"
+
 
 lumi_Run2016G = 7625.376423
 lumi_Run2016H = 8892.128926
 
 lumi =  (lumi_Run2016G+lumi_Run2016H)/20  # pb-1 (xsec in pb) 
 
-### Instantiation of an object of kind MyAnalysis for each single sample
-DY = MyAnalysis("dy", 6529.0, lumi, maxEvents=10000 )
-DY.processEvents()
+samples = {
+    "Data": {
+        "xsec": 0,  ## use xs = 0 for data
+        "lumi": lumi, 
+        "maxEvents": 10000, 
+        "color": ROOT.kBlack, 
+        "file": inputFolder+"data.root"},
+    "Drell-Yan": {
+        "xsec": 6529.0, 
+        "lumi": lumi, 
+        "maxEvents": 10000, 
+        "color": ROOT.kAzure - 8, 
+        "file": inputFolder+"dy.root"},
+    # "ggH4L": {
+    #     "xsec": 28.87 * 0.001, 
+    #     "lumi": lumi, 
+    #     "maxEvents": 1000, 
+    #     "color": ROOT.kViolet - 9, 
+    #     "file": inputFolder+"ggH4L.root"},
+    # "ZZ": {
+    #     "xsec": 12.14, 
+    #     "lumi": lumi, 
+    #     "maxEvents": -1, 
+    #     "color": ROOT.kSpring + 4, 
+    #     "file": inputFolder+"zz.root"}, 
+}
 
-# ggH4L = MyAnalysis("ggH4L", 28.87*0.001, lumi, maxEvents=-1 )
-# ggH4L.processEvents()
+sys.path.append(os.path.abspath(os.path.curdir))  # append current dir explicit to path (py2 was implicit)
 
-# ZZ = MyAnalysis("zz", 12.14, lumi, maxEvents=-1 )
-# ZZ.processEvents()
+from MyAnalysis import MyAnalysis
+from Plotter import plotVar, plotVarNorm, plotShapes
+from multiprocessing import Pool
 
-Data = MyAnalysis("data", -1 , -1, maxEvents=10000)
-Data.processEvents()
+## parallel processing
+def process_sample(sample):
+    infos = samples[sample]
+    myAnalysis = MyAnalysis(sample=sample, xsec=infos["xsec"], lumi=infos["lumi"], fileName=infos["file"], histo_folder=histo_path, maxEvents=infos["maxEvents"])
+    myAnalysis.processEvents()
 
-## samples to be processed
-samples = ["dy"]
-# samples = ["ggH4L","zz", "dy"]
+if __name__ == '__main__':
+    pool = Pool(processes=nparallelprocesses)
+    pool.map(process_sample, samples.keys())
+    pool.close()
+    pool.join()
 
-variables = ["NIsoMu", "Muon_Pt","Muon_Iso"]
-
-for v in variables:
-    print("Variable: ", v)
-    ### plotShapes (variable, samples, logScale )
-    plotShapes(v, samples, True)
-    ### plotVar(variable, samples,isData, logScale )
-    plotVar(v, samples, True, True)
+sample = "Data"
+histoFile = ROOT.TFile.Open(histo_path +"/"+ sample + "_histos.root")
+if not histoFile:
+    print("File " + histo_path +"/"+ sample + "_histos.root" + " does not exist."
+                  "Please, check to have processed the corresponding sample")
+else:
+    for v in histoFile.GetListOfKeys():
+        v = v.GetName()
+        if histoFile.Get(v).Integral() > 0:
+            print("Variable: ", v)
+            ### plotShapes (variable, samples, logScale )
+            plotShapes(v, samples, sample="Drell-Yan",  logScale=False)
+            ### plotVar(variable, samples,isData, logScale )
+            plotVar(v, samples, sample="Drell-Yan", isData=False, logScale=False)
+            plotVar(v, samples, sample="Data", isData=True, logScale=False)
+        else:
+            print("No events in the variable %s. Skipping"%v)

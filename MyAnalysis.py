@@ -1,15 +1,43 @@
 from __future__ import print_function, division, absolute_import
 
+Z_mass = 91.1876
+
 import os
 import copy
 
 import ROOT
 
-from Samples import samp, file_path, histo_path
 
+import math
+
+def compute_invariant_mass(muon1, muon2):
+    pt1, eta1, phi1, mass1 = muon1
+    pt2, eta2, phi2, mass2 = muon2
+    # Calculate energy and momentum components for particle 1
+    E1 = math.sqrt(pt1**2 * math.cosh(eta1)**2 + mass1**2)
+    px1 = pt1 * math.cos(phi1)
+    py1 = pt1 * math.sin(phi1)
+    pz1 = pt1 * math.sinh(eta1)
+    
+    # Calculate energy and momentum components for particle 2
+    E2 = math.sqrt(pt2**2 * math.cosh(eta2)**2 + mass2**2)
+    px2 = pt2 * math.cos(phi2)
+    py2 = pt2 * math.sin(phi2)
+    pz2 = pt2 * math.sinh(eta2)
+    
+    # Calculate the components of the total 4-momentum
+    E = E1 + E2
+    px = px1 + px2
+    py = py1 + py2
+    pz = pz1 + pz2
+    
+    # Calculate the invariant mass
+    invariant_mass = math.sqrt(E**2 - px**2 - py**2 - pz**2)
+    
+    return invariant_mass
 
 class MyAnalysis(object):
-    def __init__(self, sample, xsec, lumi, maxEvents=-1):
+    def __init__(self, sample, xsec, lumi, fileName, histo_folder, maxEvents=-1):
 
         """ The Init() function is called when an object MyAnalysis is initialised
         The tree corresponding to the specific sample is picked up
@@ -17,85 +45,65 @@ class MyAnalysis(object):
         """
 
         # self._tree = ROOT.TTree()
-        if sample not in samp and sample != "data" and not "Run20" in sample:
-            raise RuntimeError("Sample {} not valid. Please choose among these: {}".format(sample,
-                                                                                           list(samp)))
+        # if sample not in samp and sample != "data" and not "Run20" in sample:
+        #     raise RuntimeError("Sample {} not valid. Please choose among these: {}".format(sample,
+        #                                                                                    list(samp)))
         self.histograms = {}
         self.sample = sample
-        filename = os.path.join(file_path, sample + ".root")
-        if not os.path.isfile(filename):
-            raise ValueError("{} is not an existing file!".format(filename))
-        self._file = ROOT.TFile.Open(filename)
+        if not os.path.isfile(fileName):
+            raise ValueError("{} is not an existing file!".format(fileName))
+        self._file = ROOT.TFile.Open(fileName)
         self._file.cd()
         # tree = self._file.Get("Events")
         self._tree = self._file.Get("Events")
         self.xsec = xsec
         self.lumi = lumi
+        self.fileName = fileName
+        self.histo_folder = histo_folder
         self.nEvents = self._tree.GetEntries()
         self.maxEvents = maxEvents
         print("Number of entries for {}: {}".format(self.sample, self.nEvents))
 
-        # self._tree.SetBranchStatus("*",0)
-        # self._tree.SetBranchStatus("run",1)
-        # self._tree.SetBranchStatus("luminosityBlock",1)
-        # self._tree.SetBranchStatus("event",1)
-        # self._tree.SetBranchStatus("nMuon",1)
-        # self._tree.SetBranchStatus("Muon_pt",1)
-        # self._tree.SetBranchStatus("Muon_eta",1)
-        # self._tree.SetBranchStatus("Muon_phi",1)
-        # self._tree.SetBranchStatus("Muon_mass",1)
-        # self._tree.SetBranchStatus("Muon_pfRelIso03_all",1)
-        # self._tree.SetBranchStatus("genWeight",1)
-
         ### Book histograms
         self.bookHistos()
 
-    def getTree(self):
-        return self._tree
-
-    def getHistos(self):
-        return self.histograms
-
     def bookHistos(self):
-        h_nJet = ROOT.TH1F("NJet", "#of jets", 6, -0.5, 6.5)
-        h_nJet.SetXTitle("%# of jets")
-        self.histograms["NJet"] = h_nJet
 
-        h_nJetFinal = ROOT.TH1F("NJetFinal", "#of jets", 6, -0.5, 6.5)
-        h_nJetFinal.SetXTitle("%# of jets")
-        self.histograms["NJetFinal"] = h_nJetFinal
+        histos ={
+            # "NJet": ((6, -0.5, 6.5), "Number of jets"),
+            # "NJetFinal": ((6, -0.5, 6.5), "Number of jets"),
+            # "Muon_Iso": ((25, 0., 3.), "Muon Isolation"),
+            # "NIsoMu": ((5, -0.5, 5.5), "Number of isolated muons"),
+            # "Electron_Pt": ((50, 0., 100.), "Muon P_T"),
+            # "Electron_Eta": ((60, -3, +3), "Electron Eta"),
+            # "MET_Pt": ((25, 0., 300.), "MET P_T"),
+            # "Jet_Pt": ((50, 0., 200.), "Jet P_T"),
+            # "Jet_btag": ((10, 1., 6.), "Jet B tag"),
+            # "NBtag": ((4, 0.5, 4.5), "Number of B tagged jet/s"),
+            # "DiMuonMassSel": ((25, 0., 200.), "Di-muon mass"),
+            # "DiMuonMass1": ((25, 0., 200.), "Di-muon mass"),
+            # "DiMuonMass2": ((25, 0., 200.), "Di-muon mass"),
+            # "DiMuonMass1Sel": ((25, 0., 200.), "Di-muon mass"),
+            # "DiMuonMass2Sel": ((25, 0., 200.), "Di-muon mass"),
+            # "DiElectronMass": ((50, 0., 200.), "Di-electron mass"),
+            # "DiElectronMassSel": ((50, 0., 200.), "Di-electron mass"),
+            # "FourLeptonMass": ((25, 0., 250.), "four lepton mass"),
+            # "FourLeptonMassSel": ((25, 0., 250.), "four lepton mass"),
+            # "NGoodElectrons": ((5, 0, 5), "Number of good electrons"),
+            "Muon_Pt": ((50, 0., 100.), "Muon P_T"),
+            "Muon_Eta": ((60, -3, +3), "Muon Eta"),
+            "DiMuonMass": ((100, 70., 120.), "Di-muon mass"),
+            "NGoodMuons": ((5, 0, 5), "Number of good muons"),
+        }
 
-        h_MuonIso = ROOT.TH1F("Muon_Iso", "Muon Isolation", 25, 0., 3.)
-        h_MuonIso.SetXTitle("Muon Isolation")
-        self.histograms["Muon_Iso"] = h_MuonIso
-
-        h_NIsoMu = ROOT.TH1F("NIsoMu", "Number of isolated muons", 5, -0.5, 5.5)
-        h_NIsoMu.SetXTitle("Number of isolated muons")
-        self.histograms["NIsoMu"] = h_NIsoMu
-
-        h_MuonPt = ROOT.TH1F("Muon_Pt", "Muon P_T", 50, 0., 200.)
-        h_MuonPt.SetXTitle("Muon P_T")
-        self.histograms["Muon_Pt"] = h_MuonPt
-
-        h_METpt = ROOT.TH1F("MET_Pt", "MET P_T", 25, 0., 300.)
-        h_METpt.SetXTitle("MET P_T")
-        self.histograms["MET_Pt"] = h_METpt
-
-        h_JetPt = ROOT.TH1F("Jet_Pt", "Jet P_T", 50, 0., 200.)
-        h_JetPt.SetXTitle("Jet P_T")
-        self.histograms["Jet_Pt"] = h_JetPt
-
-        h_JetBtag = ROOT.TH1F("Jet_Btag", "Jet B tag", 10, 1., 6.)
-        h_JetBtag.SetXTitle("Jet B tag")
-        self.histograms["Jet_btag"] = h_JetBtag
-
-        h_NBtag = ROOT.TH1F("NBtag", "Jet B tag", 4, 0.5, 4.5)
-        h_NBtag.SetXTitle("Number of B tagged jets")
-        self.histograms["NBtag"] = h_NBtag
-
+        ## Create histograms
+        for h in histos:
+            ##Eg. self.histograms["NJet"] = ROOT.TH1F("NJet", "Number of jets", 6, -0.5, 6.5)
+            self.histograms[h] = ROOT.TH1F(h, histos[h][1], *histos[h][0])
+            self.histograms[h].GetXaxis().SetTitle(histos[h][1])
 
     def saveHistos(self):
-        outfilename = os.path.join(histo_path, self.sample + "_histos.root")
+        outfilename = os.path.join(self.histo_folder, self.sample + "_histos.root")
         outfile = ROOT.TFile.Open(outfilename, "RECREATE")
         outfile.cd()
         for h in self.histograms.values():
@@ -110,13 +118,17 @@ class MyAnalysis(object):
         if self.maxEvents>0:
             nevts = min(nevts, self.maxEvents)
         weight = self.xsec*self.lumi/count * self.nEvents/nevts
-        print(self.xsec,self.lumi,count , self.nEvents,nevts, self.xsec*self.lumi/count * self.nEvents/nevts)
-            # weight = weight * self.nEvents/nevts ## larger weight if only a fraction of events is used
-        tree = self.getTree()
-        muon = ROOT.TLorentzVector()
+        print("Xsec: ", self.xsec)
+        print("Lumi: ", self.lumi)
+        print("Count: ", count)
+        print("NEvents: ", self.nEvents)
+        print("Nevts: ", nevts)
+        print("Weight: ", weight)
+        tree = self._tree
 
         ### This is the place where to implement the analysis strategy: study of most sensitive variables
         ### and signal-like event selection
+        count = 0
         for entry,event in enumerate(tree):
             if entry%1000==0: print(entry)
             if entry>=nevts: break
@@ -125,21 +137,35 @@ class MyAnalysis(object):
             else: 
                 w = self.nEvents / nevts ## for data, ==1 if all events are processed
 
-            ### Muon selection - Select events with at least 1 isolated muon
-            ### with pt>25 GeV to match trigger requirements
-            muonPtCut = 25
-            muonRelIsoCut = 0.05
-            nIsoMu = 0
+            muons_p = []
+            muons_n = []
 
-            for m in range(event.nMuon):
-                self.histograms["Muon_Iso"].Fill(event.Muon_tkRelIso[m], w)
-                if (event.Muon_mediumId[m] == 1) and (event.Muon_tkIsoId[m] == 1):
-                    nIsoMu += 1
-                    # # muon.SetPtEtaPhiM(event.Muon_pt[m], event.Muon_eta[m], event.Muon_phi[m], event.Muon_mass[m])
-                    # if muon.Pt() > muonPtCut and (event.Muon_pfRelIso03_all[m] / muon.Pt()) < muonRelIsoCut:
-                    #     nIsoMu += 1
-                    #     self.histograms["Muon_Pt"].Fill(muon.Pt(), w)
-            self.histograms["NIsoMu"].Fill(nIsoMu, w)
+            nGoodMuons = 0
+            for m in range(tree.nMuon):
+                if tree.Muon_tkIsoId[m]>=1 and tree.Muon_looseId[m]==1 and tree.Muon_pt[m]>5 and tree.Muon_sip3d[m]<4 and abs(tree.Muon_eta[m])<2.4: #abs(tree.Muon_dxy[m])<0.01
+                    nGoodMuons += 1
+                    if tree.Muon_charge[m] == 1:
+                        muons_p.append((tree.Muon_pt[m], tree.Muon_eta[m], tree.Muon_phi[m], tree.Muon_mass[m]))
+                    elif tree.Muon_charge[m] == -1:
+                        muons_n.append((tree.Muon_pt[m], tree.Muon_eta[m], tree.Muon_phi[m], tree.Muon_mass[m]))
+                    else:
+                        print("Muon charge not 1 or -1")
+
+                    self.histograms["Muon_Eta"].Fill(tree.Muon_eta[m], w)
+                    self.histograms["Muon_Pt"].Fill(tree.Muon_pt[m], w)
+
+            self.histograms["NGoodMuons"].Fill(nGoodMuons, w)
+
+            if len(muons_p)<1 or len(muons_n)<1:
+                continue
+
+            dimuon_mass = compute_invariant_mass(muons_p[0], muons_n[0])
+
+            self.histograms["DiMuonMass"].Fill(dimuon_mass, w)
             # print(self.histograms["NIsoMu"].Integral())
-
+            count += 1
+        print("Calling saveHistos()")
         self.saveHistos()
+        if count == 0:
+            print("WARNING. No events accepted for sample %s" % self.sample)
+        print("COUNT: ", count)
