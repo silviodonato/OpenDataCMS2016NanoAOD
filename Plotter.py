@@ -221,10 +221,9 @@ def plotShapes(var, samples, sample, logScale=False):
         h_bkg.Scale(1 / h_bkg.Integral())
     setStyle(h_bkg, ROOT.kBlue, 0, 0)
     h_bkg.SetLineWidth(2)
-    h_bkg.Draw("hist")
     leg.AddEntry(h_bkg, "Background", "l")
 
-    histos_file = os.path.join(histo_path, "Drell-Yan_histos.root")
+    histos_file = os.path.join(histo_path, "%s_histos.root"%sample)
     if not os.path.exists(histos_file):
         print("File " + histos_file + " does not exist."
                                       "Please, check to have processed the corresponding sample")
@@ -237,8 +236,12 @@ def plotShapes(var, samples, sample, logScale=False):
         h.SetLineWidth(2)
         if h.Integral() != 0.:
             h.Scale(1 / h.Integral())
-        h.Draw("histsame")
+        h.Draw("hist")
         leg.AddEntry(h, sample, "L")
+    
+    h.SetMaximum(max(h.GetMaximum(), h_bkg.GetMaximum()) * 1.2)
+    h.Draw("hist")
+    h_bkg.Draw("hist,same")
 
     leg.Draw("SAME")
     c.SaveAs(os.path.join(save_path, var + "_Shape_MC.pdf"))
