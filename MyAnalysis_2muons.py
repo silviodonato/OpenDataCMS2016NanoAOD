@@ -9,7 +9,7 @@ import ROOT
 
 
 import math
-
+    
 def compute_invariant_mass(muon1, muon2):
     pt1, eta1, phi1, mass1 = muon1
     pt2, eta2, phi2, mass2 = muon2
@@ -37,7 +37,7 @@ def compute_invariant_mass(muon1, muon2):
     return invariant_mass
 
 class MyAnalysis(object):
-    def __init__(self, sample, xsec, lumi, fileName, histo_folder, maxEvents=-1):
+    def __init__(self, sample, xsec, lumi, fileName, histo_folder, maxEvents=-1, isGoodData=None):
 
         """ The Init() function is called when an object MyAnalysis is initialised
         The tree corresponding to the specific sample is picked up
@@ -56,8 +56,14 @@ class MyAnalysis(object):
         self._file.cd()
         # tree = self._file.Get("Events")
         self._tree = self._file.Get("Events")
+        if self._tree == None:
+            raise ValueError("TTree not found in file %s" % fileName)
         self.xsec = xsec
         self.lumi = lumi
+        if isGoodData:
+            self.isGoodData = isGoodData
+        else:
+            self.isGoodData = None
         self.fileName = fileName
         self.histo_folder = histo_folder
         self.nEvents = self._tree.GetEntries()
@@ -70,29 +76,10 @@ class MyAnalysis(object):
     def bookHistos(self):
 
         histos ={
-            # "NJet": ((6, -0.5, 6.5), "Number of jets"),
-            # "NJetFinal": ((6, -0.5, 6.5), "Number of jets"),
-            # "Muon_Iso": ((25, 0., 3.), "Muon Isolation"),
-            # "NIsoMu": ((5, -0.5, 5.5), "Number of isolated muons"),
-            # "Electron_Pt": ((50, 0., 100.), "Muon P_T"),
-            # "Electron_Eta": ((60, -3, +3), "Electron Eta"),
-            # "MET_Pt": ((25, 0., 300.), "MET P_T"),
-            # "Jet_Pt": ((50, 0., 200.), "Jet P_T"),
-            # "Jet_btag": ((10, 1., 6.), "Jet B tag"),
-            # "NBtag": ((4, 0.5, 4.5), "Number of B tagged jet/s"),
-            # "DiMuonMassSel": ((25, 0., 200.), "Di-muon mass"),
-            # "DiMuonMass1": ((25, 0., 200.), "Di-muon mass"),
-            # "DiMuonMass2": ((25, 0., 200.), "Di-muon mass"),
-            # "DiMuonMass1Sel": ((25, 0., 200.), "Di-muon mass"),
-            # "DiMuonMass2Sel": ((25, 0., 200.), "Di-muon mass"),
-            # "DiElectronMass": ((50, 0., 200.), "Di-electron mass"),
-            # "DiElectronMassSel": ((50, 0., 200.), "Di-electron mass"),
-            # "FourLeptonMass": ((25, 0., 250.), "four lepton mass"),
-            # "FourLeptonMassSel": ((25, 0., 250.), "four lepton mass"),
-            # "NGoodElectrons": ((5, 0, 5), "Number of good electrons"),
             "Muon_Pt": ((50, 0., 100.), "Muon P_T"),
             "Muon_Eta": ((60, -3, +3), "Muon Eta"),
             "DiMuonMass": ((100, 70., 120.), "Di-muon mass"),
+            "DiMuonMass1k": ((10000, 70., 120.), "Di-muon mass"),
             "NGoodMuons": ((5, 0, 5), "Number of good muons"),
         }
 
@@ -132,10 +119,14 @@ class MyAnalysis(object):
         for entry,event in enumerate(tree):
             if entry%1000==0: print(entry)
             if entry>=nevts: break
+            if not event.HLT_IsoMu24:
+                continue
             if hasattr(event,"genWeight"):  ## is MC
-                w = weight * (event.genWeight>0)
+                w = weight * (event.genWeight>0)                
             else: 
                 w = self.nEvents / nevts ## for data, ==1 if all events are processed
+                if not self.isGoodData(event.run, event.luminosityBlock):
+                    continue
 
             muons_p = []
             muons_n = []
@@ -162,6 +153,7 @@ class MyAnalysis(object):
             dimuon_mass = compute_invariant_mass(muons_p[0], muons_n[0])
 
             self.histograms["DiMuonMass"].Fill(dimuon_mass, w)
+            self.histograms["DiMuonMass1k"].Fill(dimuon_mass, w)
             # print(self.histograms["NIsoMu"].Integral())
             count += 1
         print("Calling saveHistos()")
