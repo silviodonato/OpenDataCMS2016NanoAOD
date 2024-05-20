@@ -44,6 +44,37 @@ float computeMass(float pt, float eta, float phi, float mass, int iteration, int
     else return 0;
 }
 
+float computeMass4muons(float pt, float eta, float phi, float mass, int iteration, int length){
+    using namespace std;
+    float value = 0;
+    if(iteration==0){
+        parts.clear();
+    }
+    TLorentzVector part;
+    part.SetPtEtaPhiM(pt, eta, phi, mass);
+    parts.push_back(part);
+    if(iteration==length-1){
+        if(parts.size()<2) return -1;
+        float maxMass = -1;
+        // Loop over all combinations of pairs of particles
+        for (size_t i = 0; i < parts.size(); ++i) {
+            for (size_t j = i + 1; j < parts.size(); ++j) {
+                for (size_t k = j + 1; k < parts.size(); ++j) {
+                    for (size_t l = k + 1; l < parts.size(); ++j) {
+                        // Compute invariant mass using TLorentzVector's method
+                        double mass = (parts[i] + parts[j]).M();
+                        if (mass > maxMass) {
+                            maxMass = mass;
+                        }
+                    }
+                }
+            }
+        }        
+        return maxMass;
+    }
+    else return 0;
+}
+
 void skimAndMergeFile(TString inputFiles, TString prefix=""){ //, TString outputFile
     TString outputFile;
     // Output file name is the same as the input file name, but with the extension .root
@@ -110,7 +141,21 @@ void skimAndMergeFile(TString inputFiles, TString prefix=""){ //, TString output
     }
     TTree* newTree = tree->CloneTree(0);
     
-    TTreeFormula* cut = new TTreeFormula("cut","HLT_IsoMu24 && Sum$(computeMass(Muon_pt, Muon_eta, Muon_phi, Muon_mass, Iteration$, Length$))>50 ",tree);
+    // main skim
+    //TTreeFormula* cut = new TTreeFormula("cut","HLT_IsoMu24 && Sum$(computeMass(Muon_pt, Muon_eta, Muon_phi, Muon_mass, Iteration$, Length$))>50 ",tree);
+    
+    // Prescale
+//    TTreeFormula* cut = new TTreeFormula("cut","event%20==0 ",tree); 
+    
+    // 4 muons
+//    TTreeFormula* cut = new TTreeFormula("cut","(nMuon>=4) ",tree); 
+
+    // 2 muons + 2 electrons
+//    TTreeFormula* cut = new TTreeFormula("cut","(nMuon>=2) && (nElectron>=2) ",tree); 
+ //   TTreeFormula* cut = new TTreeFormula("cut","(Sum$(Electron_mvaFall17V2Iso_WPL)>=2 && Sum$( Muon_looseId && Muon_tkIsoId>=1)>=2) ",tree);
+ //   TTreeFormula* cut = new TTreeFormula("cut","Sum$( Muon_looseId && Muon_tkIsoId>=1)>=4",tree);
+    TTreeFormula* cut = new TTreeFormula("cut","Sum$( Muon_looseId && Muon_tkIsoId>=1)>=2",tree);
+ 
 //    TTreeFormula* puFilter = new TTreeFormula("puFilter","ptHat>maxPUptHat",tree);
     
     cout << "Total entries " << entries << endl;
