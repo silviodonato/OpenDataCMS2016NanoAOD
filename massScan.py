@@ -5,6 +5,8 @@ import math
 folder = "histos"
 
 Z_mass = 91.1876
+mass_points = [x/100 for x in range(9050, 9150)]
+fit_range = (85, 95)
 
 rebin = 200
 
@@ -37,12 +39,12 @@ def getHisto(folder, sample, var):
 
 DY_histo = getHisto(folder, "Drell-Yan", "DiMuonMass1k")
 data_histo = getHisto(folder, "Data", "DiMuonMass1k")
-# DY_histo.Scale(data_histo.Integral()/DY_histo.Integral())
+DY_histo.Scale(data_histo.Integral()/DY_histo.Integral())
 
 
 
-## Compute Likelihood
-def computeLikelihood(data, mc, rangeLikelihood):
+## Compute LogLikelihood
+def computeLogLikelihood(data, mc, rangeLikelihood):
     log_likelihood = 0
     for i in range(data.FindBin(rangeLikelihood[0]), data.FindBin(rangeLikelihood[1])):
         data_i = data.GetBinContent(i+1)
@@ -56,23 +58,12 @@ def computeLikelihood(data, mc, rangeLikelihood):
 graph = ROOT.TGraph()
 
 data_histo.Rebin(rebin)
-for x in range(9100,9150):
-    x = x/100
+for x in mass_points:
     shifted_drell = shiftHisto(DY_histo, x-Z_mass)
     shifted_drell.Rebin(rebin)
-    likelihood = computeLikelihood(data_histo, shifted_drell, (85, 95))
-    print("x",x,"Likelihood: ", likelihood)
-    graph.SetPoint(graph.GetN(), x, -2*likelihood)
-
-# for x in range(100,140):
-#     x = x/100
-#     scaled_drell = DY_histo.Clone()
-#     scaled_drell.Scale(x)
-#     # shifted_drell = shiftHisto(DY_histo, x-Z_mass)
-#     scaled_drell.Rebin(rebin)
-#     likelihood = computeLikelihood(data_histo, scaled_drell, (85, 95))
-#     print("x",x,"Likelihood: ", likelihood)
-#     graph.SetPoint(graph.GetN(), x, -2*likelihood)
+    log_likelihood = computeLogLikelihood(data_histo, shifted_drell, fit_range)
+    print("x",x,"LogLikelihood: ", log_likelihood)
+    graph.SetPoint(graph.GetN(), x, -2*log_likelihood)
 
 ## add a constant to the likelihood to avoid negative values
 min_likelihood = min(graph.GetY())
@@ -80,16 +71,14 @@ for i in range(graph.GetN()):
     graph.SetPoint(i, graph.GetX()[i], graph.GetY()[i]-min_likelihood)
 
 
-DY_histo_shifted = shiftHisto(DY_histo, -5)
-DY_histo_shifted.SetLineColor(ROOT.kRed)
+shifted_drell.SetLineColor(ROOT.kRed)
 DY_histo.Rebin(rebin)
-DY_histo_shifted.Rebin(rebin)
 
 c1 = ROOT.TCanvas("c1", "c1", 1920, 1080)
 
 DY_histo.SetMaximum(1.2*max(DY_histo.GetMaximum(), data_histo.GetMaximum()))
 DY_histo.Draw("hist")
-DY_histo_shifted.Draw("hist,same")
+shifted_drell.Draw("hist,same")
 data_histo.Draw("P,same")
 
 c2 = ROOT.TCanvas("c2", "c2", 1920, 1080)
