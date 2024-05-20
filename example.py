@@ -6,10 +6,10 @@ import ROOT
 nparallelprocesses = 1
 
 
-lumi_Run2016G = 7625.376423
-lumi_Run2016H = 8892.128926
+lumi_Run2016G = 7625.376423 # pb-1
+lumi_Run2016H = 8892.128926 # pb-1
 # lumi_2mu = 258.33304 * 8892.128926/7625.376423
-lumi_2mu = 350
+lumi_2mu = 35.0 # pb-1
 
 lumi =  (lumi_Run2016G+lumi_Run2016H)  # pb-1 (xsec in pb) 
 # lumi =  lumi_Run2016G  # pb-1 (xsec in pb) 
@@ -49,10 +49,10 @@ samples = {
     "Data": {
         "xsec": 0,  ## use xs = 0 for data
         "lumi": lumi, 
-        "maxEvents": 100000, 
+        "maxEvents": -1, 
         "color": ROOT.kBlack, 
         # "file": inputFolder+"data.root",},
-        "file": inputFolder+"data_Run2016G_PS20.root",},
+        "file": inputFolder+"data.root",},
     "Drell-Yan": {
         "xsec": 6104.0, 
         "lumi": lumi, 
