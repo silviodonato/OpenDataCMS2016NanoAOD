@@ -49,9 +49,9 @@ def computeLogLikelihood(data, mc, rangeLikelihood):
     for i in range(data.FindBin(rangeLikelihood[0]), data.FindBin(rangeLikelihood[1])):
         data_i = data.GetBinContent(i+1)
         mc_i = mc.GetBinContent(i+1)
-        # prob = ROOT.TMath.Poisson(data_i, mc_i)
-        # log_prob = -mc_i + data_i*math.log(mc_i)
-        log_prob = - (data_i-mc_i)**2/(mc_i**2+data_i**2)**0.5
+        log_prob = math.log(ROOT.TMath.Poisson(data_i, mc_i))
+        #log_prob = -mc_i + data_i*math.log(mc_i)
+        #log_prob = - (data_i-mc_i)**2/(mc_i**2+data_i**2)**0.5
         log_likelihood += log_prob
     return log_likelihood
 
