@@ -1,11 +1,20 @@
+'''
+This script computes the mass of the Z boson using a log-likelihood method.
+'''
+
 import os
 import ROOT
 import math
 
+ROOT.gROOT.SetBatch(False)
+#ROOT.gROOT.SetBatch(True)
+
 folder = "histos"
 
 Z_mass = 91.1876
-mass_points = [x/100 for x in range(9050, 9150)]
+x_max = 91.30
+x_min = 90.80
+mass_points = [x/100 for x in range(int(x_min*100), int(x_max*100))]
 fit_range = (85, 95)
 
 rebin = 200
@@ -19,7 +28,7 @@ def shiftHisto(histo, x):
             shiftedHisto.SetBinContent(i+shift_bin, histo.GetBinContent(i))
     return shiftedHisto
 
-
+## Get histo from file
 def getHisto(folder, sample, var):
     filename = sample + "_histos.root"
     histos_file = os.path.join(folder, filename)
@@ -57,6 +66,7 @@ def computeLogLikelihood(data, mc, rangeLikelihood):
 
 graph = ROOT.TGraph()
 
+## Compute -2 logLikelihood plot vs mass
 data_histo.Rebin(rebin)
 for x in mass_points:
     shifted_drell = shiftHisto(DY_histo, x-Z_mass)
@@ -81,5 +91,34 @@ DY_histo.Draw("hist")
 shifted_drell.Draw("hist,same")
 data_histo.Draw("P,same")
 
+c1.SaveAs("massScan.png")
+
 c2 = ROOT.TCanvas("c2", "c2", 1920, 1080)
 graph.Draw("APL")
+
+## Fit the graph with a parabola
+fit = ROOT.TF1("fit", "((x-[0])/[1])**2 + [2]", x_min, x_max)
+fit.SetParameters(91, 0.02, 1)
+graph.Fit(fit, "R")
+fit.SetLineColor(ROOT.kRed)
+fit.Draw("same")
+c2.SaveAs("massScan_fit.png")
+print("Fit parameters: ", fit.GetParameter(0), fit.GetParameter(1), fit.GetParameter(2))
+
+par0 = fit.GetParameter(0)
+par1 = fit.GetParameter(1)
+par2 = fit.GetParameter(2)
+
+#minimum = -par1/(2*par2)
+minimum = par0
+print("Best fit value: ", minimum)
+print("Minimum value: ", fit.Eval(minimum))
+
+## Find value where fit is equal to 3.84 
+## 3.84 is the value for 2 degrees of freedom
+x2 = fit.GetX(fit.Eval(minimum)+3.84, minimum-0.3, minimum)
+print("Fit value: (lower value 95% CL) ", x2)
+x1 = fit.GetX(fit.Eval(minimum)+3.84, minimum, minimum+0.3)
+print("Fit value: (upper value 95% CL)", x1)
+print("Mass uncertainties (95%% CL): %.3f "%(abs(x2-x1)/2))
+print("Mass uncertainties (rel. %%): %.3f %%"%(abs(x2-x1)/2 / minimum *100))

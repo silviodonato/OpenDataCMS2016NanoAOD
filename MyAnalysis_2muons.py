@@ -68,7 +68,6 @@ class MyAnalysis(object):
         self.histo_folder = histo_folder
         self.nEvents = self._tree.GetEntries()
         self.maxEvents = maxEvents
-        print("Number of entries for {}: {}".format(self.sample, self.nEvents))
 
         ### Book histograms
         self.bookHistos()
@@ -105,19 +104,23 @@ class MyAnalysis(object):
         if self.maxEvents>0:
             nevts = min(nevts, self.maxEvents)
         weight = self.xsec*self.lumi/count * self.nEvents/nevts
+        print("----------------------------------------------------")
+        print("Number of entries for {}: {}".format(self.sample, self.nEvents))
         print("Xsec: ", self.xsec)
         print("Lumi: ", self.lumi)
         print("Count: ", count)
         print("NEvents: ", self.nEvents)
         print("Nevts: ", nevts)
         print("Weight: ", weight)
+        print("----------------------------------------------------")
         tree = self._tree
 
         ### This is the place where to implement the analysis strategy: study of most sensitive variables
         ### and signal-like event selection
         count = 0
         for entry,event in enumerate(tree):
-            if entry%1000==0: print(entry)
+            if entry%1000==0: print("%s - %d / %d"%(self.sample, entry, self.nEvents))
+            
             if entry>=nevts: break
             if not event.HLT_IsoMu24:
                 continue
